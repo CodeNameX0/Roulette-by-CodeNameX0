@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Canvas 룰렛</title>
+  </head>
+  <body>
+    <canvas id="canvas"></canvas>
+    <button id="spin">spin</button>
+    <script>
+    </script>
+  </body>
+</html>
+const canvas = document.getElementById("canvas");
+const ctx = canvas.getContext("2d");
+
+// 캔버스 크기 설정
+canvas.width = 500;
+canvas.height = 500;
+function drawCircle() {
+    ctx.beginPath();
+    ctx.arc(250, 250, 240, 0, Math.PI * 2);
+    ctx.closePath();
+    
+    ctx.fillStyle = "#63FF84";
+    ctx.fill();
+    ctx.stroke();
+}
+
+drawCircle()
+function drawPointer() {
+    ctx.beginPath();
+    ctx.moveTo(250, 20);
+    ctx.lineTo(243, 6);
+    ctx.lineTo(257, 6);
+    ctx.closePath();
+
+    ctx.fillStyle = "#ff0000";
+    ctx.fill();
+    ctx.stroke();
+}
+
+drawPointer()
+const testData = [
+    { id: 0, text: "(1)", background: "#ffa8a8" },
+    { id: 1, text: "(2)", background: "#ffd4a8" },
+    { id: 2, text: "(3)", background: "#ffffa8" },
+    { id: 0, text: "(4)", background: "#a8ffa8" },
+    { id: 1, text: "(5)", background: "#a8ffff" },
+    { id: 2, text: "(6)", background: "#a8a8ff" },
+];
+
+let segments = [...testData];
+let spinning = false; // 회전 상태
+let selectedSegment = null // 랜덤 값을 저장
+let rotationCount = 20; // 기본 회전수
+let totalRotation = 0 // 계산된 전체 회전수에 대한 라디안 값 
+let startTimestamp = null // animate 함수가 실행된 시간
+let duration = 5000 // 회전 시간
+function easeInOutQuad(x) {
+  return x < 0.5 ? 2 * x * x : 1 - Math.pow(-2 * x + 2, 2) / 2;
+}
+    function animate(timestamp) {
+    if (!spinning) {
+        spinning = true;
+        startTimestamp = timestamp;
+    }
+
+    let elapsed = timestamp - startTimestamp; // 경과 시간 계산
+    let progress = easeInOutQuad(Math.min(elapsed / duration, 1)); // 이징함수 적용
+    let angle = totalRotation * progress;  // 현재 회전 각도 계산
+
+    drawSegments(angle);
+
+    if (progress < 1) {
+        requestAnimationFrame(animate);
+    } else {
+        spinning = false;
+    }
+}
+      function spin() {
+    if (spinning) return; // 이미 실행중이면, 실행되지 않게함
+
+    selectedSegment = Math.floor(Math.random() * segments.length); // 랜덤한 섹션 선택
+    const angle = (Math.PI * 2) / segments.length; // 한 조각의 크기를 계산
+    const randomAngle = Math.random() * -angle;  // 선택된 섹션이 차지하는 범위에서 랜덤 값을 구합니다.
+    const correctionAngle = Math.PI * 1.5 - angle * selectedSegment; // 섹션의 시작각이 270도에 위치하게 합니다.
+
+    totalRotation = Math.PI * 2 * rotationCount + correctionAngle + randomAngle; // 전체 회전수
+    requestAnimationFrame(animate); // 애니메이션 시작
+}
+      document.getElementById("spin").addEventListener("click", spin);
